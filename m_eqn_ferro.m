@@ -1,0 +1,13 @@
+function answer = m_eqn_ferro(sval, mval, r, l, c, m_BC, k)
+
+% Change this to sixth-order
+eqn = l * (([zeros(1, 1 / k); mval(1:(1 / k) - 3, :)] ...
+    + [mval(2:(1 / k) - 2, :); m_BC * ones(1, 1 / k)] ...
+    - 2.0 * mval) / (k^2) ... % Second deriv
+    + 2.0 * r.^(-1) .* ([mval(2:(1 / k) - 2, :); m_BC * ones(1, 1 / k)] ... 
+    - [zeros(1, 1 / k); mval(1:(1 / k) - 3, :)]) / (2.0 * k) ... % 1st deriv
+    - (2.0 * mval) .* r.^(-2)) ...
+    - mval.^3 + mval + (4.0 / 3.0) * c * sval .* mval;
+
+answer=eqn;
+end
