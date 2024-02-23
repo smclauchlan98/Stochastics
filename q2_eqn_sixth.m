@@ -1,4 +1,4 @@
-function answer = q2_eqn_sixth(q1val, q2val, q3val, r, t, eps, d, e, f, q_BC, k)
+function eqn2 = q2_eqn_sixth(q1val, q2val, q3val, r, t, eps, d, e, f, q_BC, k)
 
 eqn2 = eps * eps * (([zeros(1, 1 / k); q2val(1:(1 / k) - 3, :)] ...
     + [q2val(2:(1 / k) - 2, :); q_BC(2, :)] ...
@@ -28,5 +28,6 @@ eqn2 = eps * eps * (([zeros(1, 1 / k); q2val(1:(1 / k) - 3, :)] ...
     + 3.0 * sqrt(3.0) * q1val .* q3val.^4 / 4.0 ...
     + 9.0 * q2val .* q3val.^4 / 4.0));
 
-answer = eqn2;
+eqn2(:, end) = zeros((1 / k) - 2, 1);
+
 end

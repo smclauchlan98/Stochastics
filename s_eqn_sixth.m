@@ -1,6 +1,5 @@
 function answer = s_eqn_sixth(sval, r, t, eps, d, e, f, s_BC, k)
 
-% Change this to sixth-order
 eqn = eps * eps * (([zeros(1, 1 / k); sval(1:(1 / k) - 3, :)] ...
     + [sval(2:(1 / k) - 2, :); s_BC * ones(1, 1 / k)] ...
     - 2.0 * sval) / (k^2) ... % Second deriv
