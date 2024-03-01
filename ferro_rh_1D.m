@@ -36,7 +36,7 @@ for u = 1:3
     % Get value of s on boundary
     syms ss
     eqn =  ss^3 - (3.0 * sqrt(6.0) / 4.0) * ss^2 ...
-        + ((3.0 * t / 4.0) - 3.0 * c(u)^2) * ss - (3.0 * c / 4.0) == 0;
+        + ((3.0 * t / 4.0) - 3.0 * c(u)^2) * ss - (3.0 * c(u) / 4.0) == 0;
     Sol = vpasolve(eqn, ss);
     s_BC = 0.0;
     roots = zeros(length(Sol), 1);
@@ -146,7 +146,7 @@ for u = 1:3
     %ylim([0 1])
     set(gcf,'visible','off')
     plotname = sprintf(['./Output/Ferro/Plots' ...
-        '/detsprofile_t%.1fl%.1fc%.1f.png'], ...
+        '/detmprofile_t%.1fl%.1fc%.1f.png'], ...
         t, l, c(u));
     saveas(gcf, plotname, 'png')
 

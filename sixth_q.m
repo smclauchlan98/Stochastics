@@ -21,7 +21,7 @@ sigma = 1.0; % Scale noise
 % Time and time steps
 T = 2.0;
 M = 100000; % Number of time steps
-dtref = T / M; % Size of time steps
+dtref = 0.000001; % Size of time steps
 dt = dtref * kappa;
 
 % Spatial grid
@@ -30,6 +30,7 @@ theta_1 = (pi / 2.0) * linspace(0, 1, 1 / k); % quarter circle
 [theta, r] = meshgrid(theta_1, r);
 x = r .* cos(theta);
 y = r .* sin(theta);
+z = meshgrid(linspace(0, 0), linspace(0, 0));
 
 % Get value of s on boundary
 syms ss
@@ -47,65 +48,83 @@ for i = 1:length(Sol)
 end
 
 % Define vector of q BCs.
-q_BC = [sqrt(2.0 / 3.0) * (1.0 - (3.0 / 2.0) * sin(theta_1).^2) * s_BC;
-    (sqrt(2.0) / 2.0) * sin(theta_1).^2 * s_BC;
-    sqrt(2.0) * sin(theta_1) .* cos(theta_1) * s_BC];
+q_BC = [sqrt(2.0 / 3.0) * (1.0 - (3.0 / 2.0) * cos(theta_1).^2) * s_BC;
+    (sqrt(2.0) / 2.0) * cos(theta_1(1:end - 1)).^2 * s_BC 0.0;
+    sqrt(2.0) * sin(theta_1(1:end - 1)) .* cos(theta_1(1:end - 1)) * s_BC 0.0];
+
+% Values of r without BC
+r_ref = r(1:(1 / k) - 1, :);
+theta_ref = theta(1:(1 / k) - 1, :);
 
 % Initial condition
 % Scale to s_plus?
-q1_0 = s_BC * rand((1 / k) - 2, 1 / k);
-q2_0 = s_BC * [rand((1 / k) - 2, (1 / k) - 1) zeros((1 / k) - 2, 1)];
-q3_0 = s_BC * [zeros((1 / k) - 2, 1) rand((1 / k) - 2, (1 / k) - 2) ...
-    zeros((1 / k) - 2, 1)];
-
-% Values of r without BC
-r_ref = r(2:(1 / k) - 1, :);
+% q1_0 = s_BC * rand((1 / k) - 1, 1 / k);
+% q2_0 = s_BC * [rand((1 / k) - 1, (1 / k) - 1) zeros((1 / k) - 1, 1)];
+% q3_0 = s_BC * [zeros((1 / k) - 1, 1) rand((1 / k) - 1, (1 / k) - 2) ...
+%     zeros((1 / k) - 1, 1)];
+q1_0 = zeros((1 / k) - 1, 1 / k);
+q2_0 = zeros((1 / k) - 1, 1 / k);
+q3_0 = zeros((1 / k) - 1, 1 / k);
+% q1_0 = (s_BC / 2) * r_ref;
+% q2_0 = (s_BC / 2) * [zeros(1, 1 / k); ...
+%     r_ref(2:end, 1:end - 1) zeros((1 / k) - 2, 1)];
+% q3_0 = (s_BC / 2) * [zeros(1, 1 / k);...
+%     zeros((1 / k) - 2, 1) r_ref(2:end, 2:end - 1) zeros((1 / k) - 2, 1)];
 
 % Tolerance for steady state solve
 tol = 10^(-6);
-% tol = 10;
-
+% % tol = 10;
+% 
 % Solve without noise
 it = 1;
-fn1 = q1_eqn_sixth(q1_0, q2_0, q3_0, r_ref, t, eps, d, e, f, q_BC, k);
-fn2 = q2_eqn_sixth(q1_0, q2_0, q3_0, r_ref, t, eps, d, e, f, q_BC, k);
-fn3 = q3_eqn_sixth(q1_0, q2_0, q3_0, r_ref, t, eps, d, e, f, q_BC, k);
+fn1 = q1_eqn_sixth(q1_0, q2_0, q3_0, r_ref, theta_ref, t, eps, d, e, f, q_BC, k);
+fn2 = q2_eqn_sixth(q1_0, q2_0, q3_0, r_ref, theta_ref, t, eps, d, e, f, q_BC, k);
+fn3 = q3_eqn_sixth(q1_0, q2_0, q3_0, r_ref, theta_ref, t, eps, d, e, f, q_BC, k);
 while sqrt(norm(fn1)^2 + norm(fn2)^2 + norm(fn3)^2) * k^0.5 > tol % steady solution solve
     fprintf('Iteration %d, error: %.7f\n', ...
         it, sqrt(norm(fn1)^2 + norm(fn2)^2 + norm(fn3)^2) * k^0.5); 
 
-    k1_1 = q1_eqn_sixth(q1_0, q2_0, q3_0, r_ref, t, eps, d, e, f, q_BC, k);
-    k1_2 = q2_eqn_sixth(q1_0, q2_0, q3_0, r_ref, t, eps, d, e, f, q_BC, k);
-    k1_3 = q3_eqn_sixth(q1_0, q2_0, q3_0, r_ref, t, eps, d, e, f, q_BC, k);
+    k1_1 = q1_eqn_sixth(q1_0, q2_0, q3_0, r_ref, theta_ref, t, eps, d, e, f, q_BC, k);
+    k1_2 = q2_eqn_sixth(q1_0, q2_0, q3_0, r_ref, theta_ref, t, eps, d, e, f, q_BC, k);
+    k1_3 = q3_eqn_sixth(q1_0, q2_0, q3_0, r_ref, theta_ref, t, eps, d, e, f, q_BC, k);
     k2_1 = q1_eqn_sixth(q1_0 + dt * k1_1 / 2.0, q2_0 + dt * k1_2 / 2.0, ...
-        q3_0 + dt * k1_3 / 2.0, r_ref, t, eps, d, e, f, q_BC, k);
+        q3_0 + dt * k1_3 / 2.0, r_ref, theta_ref, t, eps, d, e, f, q_BC, k);
     k2_2 = q2_eqn_sixth(q1_0 + dt * k1_1 / 2.0, q2_0 + dt * k1_2 / 2.0, ...
-        q3_0 + dt * k1_3 / 2.0, r_ref, t, eps, d, e, f, q_BC, k);
+        q3_0 + dt * k1_3 / 2.0, r_ref, theta_ref, t, eps, d, e, f, q_BC, k);
     k2_3 = q3_eqn_sixth(q1_0 + dt * k1_1 / 2.0, q2_0 + dt * k1_2 / 2.0, ...
-        q3_0 + dt * k1_3 / 2.0, r_ref, t, eps, d, e, f, q_BC, k);
+        q3_0 + dt * k1_3 / 2.0, r_ref, theta_ref, t, eps, d, e, f, q_BC, k);
     k3_1 = q1_eqn_sixth(q1_0 + dt * k2_1 / 2.0, q2_0 + dt * k2_2 / 2.0, ...
-        q3_0 + dt * k2_3 / 2.0, r_ref, t, eps, d, e, f, q_BC, k);
+        q3_0 + dt * k2_3 / 2.0, r_ref, theta_ref, t, eps, d, e, f, q_BC, k);
     k3_2 = q2_eqn_sixth(q1_0 + dt * k2_1 / 2.0, q2_0 + dt * k2_2 / 2.0, ...
-        q3_0 + dt * k2_3 / 2.0, r_ref, t, eps, d, e, f, q_BC, k);
+        q3_0 + dt * k2_3 / 2.0, r_ref, theta_ref, t, eps, d, e, f, q_BC, k);
     k3_3 = q3_eqn_sixth(q1_0 + dt * k2_1 / 2.0, q2_0 + dt * k2_2 / 2.0, ...
-        q3_0 + dt * k2_3 / 2.0, r_ref, t, eps, d, e, f, q_BC, k);
+        q3_0 + dt * k2_3 / 2.0, r_ref, theta_ref, t, eps, d, e, f, q_BC, k);
     k4_1 = q1_eqn_sixth(q1_0 + dt * k3_1 / 2.0, q2_0 + dt * k3_2 / 2.0, ...
-        q3_0 + dt * k3_3 / 2.0, r_ref, t, eps, d, e, f, q_BC, k);
+        q3_0 + dt * k3_3 / 2.0, r_ref, theta_ref, t, eps, d, e, f, q_BC, k);
     k4_2 = q2_eqn_sixth(q1_0 + dt * k3_1 / 2.0, q2_0 + dt * k3_2 / 2.0, ...
-        q3_0 + dt * k3_3 / 2.0, r_ref, t, eps, d, e, f, q_BC, k);
+        q3_0 + dt * k3_3 / 2.0, r_ref, theta_ref, t, eps, d, e, f, q_BC, k);
     k4_3 = q3_eqn_sixth(q1_0 + dt * k3_1 / 2.0, q2_0 + dt * k3_2 / 2.0, ...
-        q3_0 + dt * k3_3 / 2.0, r_ref, t, eps, d, e, f, q_BC, k);
+        q3_0 + dt * k3_3 / 2.0, r_ref, theta_ref, t, eps, d, e, f, q_BC, k);
 
-    q1D = q1_0 + (dt / 6.0) * (k1_1 + 2.0 * k2_1 + 2.0 * k3_1 + k4_1);
-    q2D = q2_0 + (dt / 6.0) * (k1_2 + 2.0 * k2_2 + 2.0 * k3_2 + k4_2);
-    q3D = q3_0 + (dt / 6.0) * (k1_3 + 2.0 * k2_3 + 2.0 * k3_3 + k4_3);
+    q1_inc = k1_1 + 2.0 * k2_1 + 2.0 * k3_1 + k4_1;
+    q2_inc = k1_2 + 2.0 * k2_2 + 2.0 * k3_2 + k4_2;
+    q3_inc = k1_3 + 2.0 * k2_3 + 2.0 * k3_3 + k4_3;
+
+    q2_inc = [zeros(1, 1 / k); q2_inc(2:end, :)];
+    q3_inc = [zeros(1, 1 / k); q3_inc(2:end, :)];
+
+    q1D = q1_0 + (dt / 6.0) * q1_inc;
+    q2D = q2_0 + (dt / 6.0) ...
+        * [q2_inc(:, 1:(1 / k) - 1) zeros((1 / k) - 1, 1)];
+    q3D = q3_0 + (dt / 6.0) ...
+        * [zeros((1 / k) - 1, 1) q3_inc(:, 1:(1 / k) - 2) zeros((1 / k) - 1, 1)];
     q1_0 = q1D;
     q2_0 = q2D;
     q3_0 = q3D;
 
-    fn1 = q1_eqn_sixth(q1_0, q2_0, q3_0, r_ref, t, eps, d, e, f, q_BC, k);
-    fn2 = q2_eqn_sixth(q1_0, q2_0, q3_0, r_ref, t, eps, d, e, f, q_BC, k);
-    fn3 = q3_eqn_sixth(q1_0, q2_0, q3_0, r_ref, t, eps, d, e, f, q_BC, k);
+    fn1 = q1_eqn_sixth(q1_0, q2_0, q3_0, r_ref, theta_ref, t, eps, d, e, f, q_BC, k);
+    fn2 = q2_eqn_sixth(q1_0, q2_0, q3_0, r_ref, theta_ref, t, eps, d, e, f, q_BC, k);
+    fn3 = q3_eqn_sixth(q1_0, q2_0, q3_0, r_ref, theta_ref, t, eps, d, e, f, q_BC, k);
 
     it = it + 1;
 
@@ -113,10 +132,17 @@ end
 
 n_iter = it - 1;
 
-q1PDEsol = [zeros(1, 1 / k); q1D; q_BC(1, :)];
-q2PDEsol = [zeros(1, 1 / k); q2D; q_BC(2, :)];
-q3PDEsol = [zeros(1, 1 / k); q3D; q_BC(3, :)];
+q1PDEsol = [q1D; q_BC(1, :)];
+q2PDEsol = [q2D; q_BC(2, :)];
+q3PDEsol = [q3D; q_BC(3, :)];
 betaD = beta_biax(q1PDEsol, q2PDEsol, q3PDEsol);
+
+filename = sprintf(['./Output/SixthqSolutions' ...
+    '/detbeta_t%.1feps%.1f%de%df%dniter%d.csv'], ...
+    t, eps, d, e, f, n_iter);
+TT = array2table(betaD);
+writetable(TT, filename, 'WriteVariableNames', false);
+
 
 figure
 surf(x, y, betaD, EdgeColor = 'interp')
@@ -129,25 +155,25 @@ view(2)
 filename = sprintf(['./Output/SixthqSolutions' ...
     '/detq1_t%.1feps%.1f%de%df%dniter%d.csv'], ...
     t, eps, d, e, f, n_iter);
-T = array2table(q1PDEsol);
-writetable(T, filename, 'WriteVariableNames', false);
+TT = array2table(q1PDEsol);
+writetable(TT, filename, 'WriteVariableNames', false);
 
 filename = sprintf(['./Output/SixthqSolutions' ...
     '/detq2_t%.1feps%.1f%de%df%dniter%d.csv'], ...
     t, eps, d, e, f, n_iter);
-T = array2table(q2PDEsol);
-writetable(T, filename, 'WriteVariableNames', false);
+TT = array2table(q2PDEsol);
+writetable(TT, filename, 'WriteVariableNames', false);
 
 filename = sprintf(['./Output/SixthqSolutions' ...
     '/detq3_t%.1feps%.1f%de%df%dniter%d.csv'], ...
     t, eps, d, e, f, n_iter);
-T = array2table(q3PDEsol);
-writetable(T, filename, 'WriteVariableNames', false);
+TT = array2table(q3PDEsol);
+writetable(TT, filename, 'WriteVariableNames', false);
 
 filename = sprintf(['./Output/SixthqSolutions' ...
     '/detbeta_t%.1feps%.1f%de%df%dniter%d.csv'], ...
     t, eps, d, e, f, n_iter);
-T = array2table(betaD);
-writetable(T, filename, 'WriteVariableNames', false);
+TT = array2table(betaD);
+writetable(TT, filename, 'WriteVariableNames', false);
 
 

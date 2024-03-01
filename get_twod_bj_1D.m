@@ -1,4 +1,4 @@
-function bj = get_twod_bj_sixth_rh_1D(dtref, J, alpha, radius)
+function bj = get_twod_bj_1D(dtref, J, alpha, radius)
 
 % We normalise lambda here, instead of just using j1^2 + j2^2
 lambdax = 2.0 * pi * [0:J(1) + 1 -J(1):-1]' / (pi / 2.0); % Divided J by 2 in function argument
