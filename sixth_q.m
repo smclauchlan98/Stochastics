@@ -2,7 +2,7 @@ close all
 clc
 
 % Define parameters
-t = -20.0;
+t = 0.0;
 eps = 0.1;
 d = 1.0;
 e = 0.0;
@@ -21,7 +21,7 @@ sigma = 1.0; % Scale noise
 % Time and time steps
 T = 2.0;
 M = 100000; % Number of time steps
-dtref = 0.000001; % Size of time steps
+dtref = 0.00002; % Size of time steps
 dt = dtref * kappa;
 
 % Spatial grid
@@ -50,17 +50,20 @@ end
 % Define vector of q BCs.
 q_BC = [sqrt(2.0 / 3.0) * (1.0 - (3.0 / 2.0) * cos(theta_1).^2) * s_BC;
     (sqrt(2.0) / 2.0) * cos(theta_1(1:end - 1)).^2 * s_BC 0.0;
-    sqrt(2.0) * sin(theta_1(1:end - 1)) .* cos(theta_1(1:end - 1)) * s_BC 0.0];
+    0.0 sqrt(2.0) * sin(theta_1(2:end - 1)) .* cos(theta_1(2:end - 1)) * s_BC 0.0];
+% q_BC = [sqrt(2.0 / 3.0) * (1.0 - (3.0 / 2.0) * sin(theta_1).^2) * s_BC;
+%     (sqrt(2.0) / 2.0) * sin(theta_1(1:end - 1)).^2 * s_BC 0.0;
+    % 0.0 sqrt(2.0) * sin(theta_1(2:end - 1)) .* cos(theta_1(2:end - 1)) * s_BC 0.0];
 
 % Values of r without BC
 r_ref = r(1:(1 / k) - 1, :);
-theta_ref = theta(1:(1 / k) - 1, :);
+theta_ref = theta(1:(1 / k) - 1, :); % Phi in working
 
 % Initial condition
 % Scale to s_plus?
-% q1_0 = s_BC * rand((1 / k) - 1, 1 / k);
-% q2_0 = s_BC * [rand((1 / k) - 1, (1 / k) - 1) zeros((1 / k) - 1, 1)];
-% q3_0 = s_BC * [zeros((1 / k) - 1, 1) rand((1 / k) - 1, (1 / k) - 2) ...
+% q1_0 = rand((1 / k) - 1, 1 / k);
+% q2_0 = [rand((1 / k) - 1, (1 / k) - 1) zeros((1 / k) - 1, 1)];
+% q3_0 = [zeros((1 / k) - 1, 1) rand((1 / k) - 1, (1 / k) - 2) ...
 %     zeros((1 / k) - 1, 1)];
 q1_0 = zeros((1 / k) - 1, 1 / k);
 q2_0 = zeros((1 / k) - 1, 1 / k);
@@ -117,7 +120,7 @@ while sqrt(norm(fn1)^2 + norm(fn2)^2 + norm(fn3)^2) * k^0.5 > tol % steady solut
     q2D = q2_0 + (dt / 6.0) ...
         * [q2_inc(:, 1:(1 / k) - 1) zeros((1 / k) - 1, 1)];
     q3D = q3_0 + (dt / 6.0) ...
-        * [zeros((1 / k) - 1, 1) q3_inc(:, 1:(1 / k) - 2) zeros((1 / k) - 1, 1)];
+        * [zeros((1 / k) - 1, 1) q3_inc(:, 2:(1 / k) - 1) zeros((1 / k) - 1, 1)];
     q1_0 = q1D;
     q2_0 = q2D;
     q3_0 = q3D;

@@ -2,10 +2,10 @@ close all
 clc
 
 % Define parameters
-t = 0.0;
-eps = 1.0;
+t = -10.0;
+eps = 0.1;
 d = 1.0;
-e = 0.0;
+e = 0.0; 
 f = 1.0;
 radius = 1.0;
 
@@ -33,11 +33,12 @@ error = 10^(-6);
 
 % Parameters important for SPDE defn and soln
 kappa = 1.0;
-reg = [0.01 0.1 1.0]; % Controls decay rate
+% reg = [0.01 0.1 1.0]; % Controls decay rate
+reg = 0.01;
 sigma = 1.0; % Scale noise
 
 % Time and time steps
-T = 1.0;
+T = 5.0;
 M = 100000; % Number of time steps (if T = 2.0)
 dtref = 2.0 / 100000; % Size of time steps
 dt = dtref * kappa;
@@ -218,8 +219,8 @@ for p = 1:3
         set(gca, 'FontSize', 14, 'FontWeight', 'bold')
         set(gcf,'visible','off')
         plotname = sprintf(['./Output/SixthLine/Plots' ...
-            '/stochsprofile_t%.1feps%.1fT%dalpha%.2fnsim%d.png'], ...
-            t, eps, vpa(T), alpha(p), n_sim);
+            '/stochsprofile_t%.1feps%.1fT%dreg%.2fnsim%d.png'], ...
+            t, eps, vpa(T), reg(p), n_sim);
         saveas(gcf, plotname, 'png')
 
 
